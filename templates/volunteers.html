@@ -1,0 +1,71 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class="row divider green">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>{{ event.name }}</h1>
+			<h3>Date: {{event.date}}</h3>
+			<h3>Start Time: {{event.timeStart}}</h3>
+			<h3>End Time: {{event.timeEnd}}</h3>
+			<h3>Number of Volunteers needed: {{event.numVolunteers}}</h3>
+			<h3>Event Description: {{event.description}}
+		</div>
+	</div>
+
+<div class = 'flash'>
+		      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+          
+        <ul>
+        {% for message in messages %}
+            <li> <strong> {{ message }} </strong> </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+</div>
+
+	<div class="row padding-top padding-bottom">
+		<div class="col-md-1"></div>
+		<div class="col-md-11 padding-none">
+			<a href="{{url_for('editEvent', event_id = event.id )}}">
+				<button class="btn btn-default" id="edit-event">
+					Edit Event
+				</button>
+			</a>
+			<a href="{{url_for('newVolunteer', event_id = event.id )}}">
+				<button class="btn btn-default" id="new-volunteer">
+					Add Volunteer
+				</button>
+			</a>
+			<a href="{{url_for('deleteEvent', event_id = event.id )}}">
+				<button class="btn btn-default delete" id="delete-event">
+					Delete Event
+				</button>
+			</a>
+		</div>
+		<div class="col-md-7"></div>
+	</div>
+	
+	{% if volunteers !=[] %}	
+		<div class="row">
+			<div class="col-md-1"></div>
+			<div class="col-md-3">
+				<h2>Volunteers - {{numVolunteered}}</h2>
+					{% for i in volunteers %}
+						<div class="menu-item">
+							<h3>{{i.name}}</h3>
+							<p>{{i.attuid}}</p>
+							<a href='{{url_for('editVolunteer', event_id = event.id, volunteer_id=i.id ) }}'>Edit</a> | 
+							<a href='{{url_for('deleteVolunteer', event_id = event.id, volunteer_id=i.id ) }}'>Delete</a>
+						</div>
+					{% endfor %}
+			</div>
+			<div class="col-md-1"></div>
+		</div>
+	{% endif %}
+{% endblock %}
