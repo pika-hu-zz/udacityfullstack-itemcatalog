@@ -14,6 +14,15 @@ Base = declarative_base()
 
 
 ## Tables
+class User(Base):
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    picture = Column(String(250))
+
+
 class Event(Base):
     __tablename__ = 'event'
 
@@ -24,6 +33,21 @@ class Event(Base):
     timeEnd = Column(Time)
     numVolunteers = Column(Integer)
     description = Column(String(250))
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'date': str(self.date),
+            'start time': str(self.timeStart),
+            'end time': str(self.timeEnd),
+            'number of volunteers needed': self.numVolunteers,
+            'description': self.description,
+            'id': self.id,
+        }
 
 
 class Volunteer(Base):
@@ -33,6 +57,17 @@ class Volunteer(Base):
     attuid = Column(String(6))
     event_id = Column(Integer, ForeignKey('event.id'))
     event = relationship(Event)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'ATTUID': self.attuid,
+            'id': self.id,
+        }
 
 
 ## End of file config
