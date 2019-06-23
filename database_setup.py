@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-## Initial config
+# Initial config
 
 import sys
 import os
@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 Base = declarative_base()
 
 
-## Tables
+# Tables
 class User(Base):
     __tablename__ = 'user'
 
@@ -70,7 +70,7 @@ class Volunteer(Base):
         }
 
 
-## End of file config
+# End of file config
 engine = create_engine('sqlite:///aspirevolunteertracker.db')
 
 Base.metadata.create_all(engine)

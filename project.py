@@ -34,7 +34,8 @@ session = DBSession()
 # Create a state token
 @app.route('/login/')
 def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    state = ''.join(random.choice(
+        string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
@@ -143,7 +144,8 @@ def gdisconnect():
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
     print(login_session['username'])
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = ('https://accounts.google.com/o/oauth2/revoke?token=%s'
+           % login_session['access_token'])
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
@@ -164,9 +166,12 @@ def gdisconnect():
         return response
 
 
-## User Functions
+# User Functions
 def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session['email'], picture=login_session['picture'])
+    newUser = User(
+        name=login_session['username'],
+        email=login_session['email'],
+        picture=login_session['picture'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
@@ -186,12 +191,14 @@ def getUserID(email):
         return None
 
 
-## JSON Endpoint
+# JSON Endpoint
 @app.route('/event/<int:event_id>/JSON')
 def eventJSON(event_id):
     event = session.query(Event).filter_by(id=event_id).one()
     volunteers = session.query(Volunteer).filter_by(event_id=event_id).all()
-    return jsonify(Event=event.serialize, Volunteers=[i.serialize for i in volunteers])
+    return jsonify(
+        Event=event.serialize,
+        Volunteers=[i.serialize for i in volunteers])
 
 
 @app.route('/event/<int:event_id>/volunteers/<int:volunteer_id>/JSON')
@@ -200,7 +207,7 @@ def volunteerJSON(event_id, volunteer_id):
     return jsonify(Volunteer=volunteer.serialize)
 
 
-## Show all events
+# Show all events
 @app.route('/')
 @app.route('/home/')
 def showEvents():
@@ -208,19 +215,21 @@ def showEvents():
     return render_template('events.html', events=events)
 
 
-## Create a new event
+# Create a new event
 @app.route('/event/new/', methods=['GET', 'POST'])
 def newEvent():
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
         newEvent = Event(
-            name = request.form['name'], 
-            date = datetime.datetime.strptime(request.form['date'], '%Y-%m-%d'), 
-            timeStart = datetime.datetime.time(datetime.datetime.strptime(request.form['timeStart'], '%H:%M')), 
-            timeEnd = datetime.datetime.time(datetime.datetime.strptime(request.form['timeEnd'], '%H:%M')), 
-            numVolunteers = request.form['numVolunteers'], 
-            description = request.form['description'], 
+            name=request.form['name'],
+            date=datetime.datetime.strptime(request.form['date'], '%Y-%m-%d'),
+            timeStart=datetime.datetime.time(datetime.datetime.strptime(
+                request.form['timeStart'], '%H:%M')),
+            timeEnd=datetime.datetime.time(datetime.datetime.strptime(
+                request.form['timeEnd'], '%H:%M')),
+            numVolunteers=request.form['numVolunteers'],
+            description=request.form['description'],
             user_id=login_session['user_id'])
         session.add(newEvent)
         flash('New Event %s Successfully Created' % newEvent.name)
@@ -230,23 +239,30 @@ def newEvent():
         return render_template('newEvent.html')
 
 
-## Edit an event
+# Edit an event
 @app.route('/event/<int:event_id>/edit/', methods=['GET', 'POST'])
 def editEvent(event_id):
     editedEvent = session.query(Event).filter_by(id=event_id).one()
     owner = getUserInfo(editedEvent.user_id)
     if owner.id != login_session['user_id']:
-        flash("You do not have permission to edit this event. Event owner: %s" % owner.name)
+        flash(
+            "You do not have permission to edit this event. Event owner: %s"
+            % owner.name)
         return redirect(url_for('showEvents'))
     if request.method == 'POST':
         if request.form['name']:
             editedEvent.name = request.form['name']
         if request.form['date']:
-            editedEvent.date = datetime.datetime.strptime(request.form['date'], '%Y-%m-%d')
+            editedEvent.date = datetime.datetime.strptime(
+                request.form['date'], '%Y-%m-%d')
         if request.form['timeStart']:
-            editedEvent.timeStart = datetime.datetime.time(datetime.datetime.strptime(request.form['timeStart'], '%H:%M'))
+            editedEvent.timeStart = datetime.datetime.time(
+                datetime.datetime.strptime(
+                    request.form['timeStart'], '%H:%M'))
         if request.form['timeEnd']:
-            editedEvent.timeEnd = datetime.datetime.time(datetime.datetime.strptime(request.form['timeEnd'], '%H:%M'))
+            editedEvent.timeEnd = datetime.datetime.time(
+                datetime.datetime.strptime(
+                    request.form['timeEnd'], '%H:%M'))
         if request.form['numVolunteers']:
             editedEvent.numVolunteers = request.form['numVolunteers']
         if request.form['description']:
@@ -256,16 +272,19 @@ def editEvent(event_id):
         flash('Event Successfully Edited %s' % editedEvent.name)
         return redirect(url_for('showEvents'))
     else:
-        return render_template('editEvent.html', event=editedEvent, event_id=event_id)
+        return render_template('editEvent.html',
+                               event=editedEvent, event_id=event_id)
 
 
-## Delete an event
+# Delete an event
 @app.route('/event/<int:event_id>/delete/', methods=['GET', 'POST'])
 def deleteEvent(event_id):
     eventToDelete = session.query(Event).filter_by(id=event_id).one()
     owner = getUserInfo(eventToDelete.user_id)
     if owner.id != login_session['user_id']:
-        flash("You do not have permission to delete this event. Event owner: %s" % owner.name)
+        flash(
+            "You do not have permission to delete this event. Event owner: %s"
+            % owner.name)
         return redirect(url_for('showEvents'))
     if request.method == 'POST':
         session.delete(eventToDelete)
@@ -273,33 +292,39 @@ def deleteEvent(event_id):
         session.commit()
         return redirect(url_for('showEvents', event_id=event_id))
     else:
-        return render_template('deleteEvent.html', event=eventToDelete, event_id=event_id)
+        return render_template('deleteEvent.html',
+                               event=eventToDelete, event_id=event_id)
 
 
-## Show volunteers for an event
+# Show volunteers for an event
 @app.route('/event/<int:event_id>/')
 @app.route('/event/<int:event_id>/volunteers/')
 def showVolunteers(event_id):
     event = session.query(Event).filter_by(id=event_id).one()
     owner = getUserInfo(event.user_id)
     volunteers = session.query(Volunteer).filter_by(event_id=event_id).all()
-    numVolunteered = session.query(Volunteer).filter_by(event_id=event_id).count()
-    return render_template('volunteers.html', volunteers=volunteers, event=event, numVolunteered=numVolunteered, owner=owner)
+    numVolunteered = session.query(Volunteer).filter_by(
+        event_id=event_id).count()
+    return render_template('volunteers.html', volunteers=volunteers,
+                           event=event, numVolunteered=numVolunteered,
+                           owner=owner)
 
 
-## Create a new volunteer
+# Create a new volunteer
 @app.route('/event/<int:event_id>/volunteers/new/', methods=['GET', 'POST'])
 def newVolunteer(event_id):
     event = session.query(Event).filter_by(id=event_id).one()
     owner = getUserInfo(event.user_id)
     if owner.id != login_session['user_id']:
-        flash("You do not have permission to edit this event. Event owner: %s" % owner.name)
+        flash(
+            "You do not have permission to edit this event. Event owner: %s"
+            % owner.name)
         return redirect(url_for('showEvents'))
     if request.method == 'POST':
         newVolunteer = Volunteer(
-            name=request.form['name'], 
-            attuid=request.form['attuid'], 
-            event_id=event_id, 
+            name=request.form['name'],
+            attuid=request.form['attuid'],
+            event_id=event_id,
             user_id=login_session['user_id'])
         session.add(newVolunteer)
         session.commit()
@@ -309,14 +334,17 @@ def newVolunteer(event_id):
         return render_template('newVolunteer.html', event_id=event_id)
 
 
-## Edit a volunteer
-@app.route('/event/<int:event_id>/volunteers/<int:volunteer_id>/edit', methods=['GET', 'POST'])
+# Edit a volunteer
+@app.route('/event/<int:event_id>/volunteers/<int:volunteer_id>/edit',
+           methods=['GET', 'POST'])
 def editVolunteer(event_id, volunteer_id):
     editedVolunteer = session.query(Volunteer).filter_by(id=volunteer_id).one()
     event = session.query(Event).filter_by(id=event_id).one()
     owner = getUserInfo(editedVolunteer.user_id)
     if owner.id != login_session['user_id']:
-        flash("You do not have permission to edit this event. Event owner: %s" % owner.name)
+        flash(
+            "You do not have permission to edit this event. Event owner: %s"
+            % owner.name)
         return redirect(url_for('showEvents'))
     if request.method == 'POST':
         if request.form['name']:
@@ -328,17 +356,23 @@ def editVolunteer(event_id, volunteer_id):
         flash('Volunteer Successfully Edited')
         return redirect(url_for('showVolunteers', event_id=event_id))
     else:
-        return render_template('editVolunteer.html', event_id=event_id, volunteer_id=volunteer_id, volunteer=editedVolunteer)
+        return render_template('editVolunteer.html', event_id=event_id,
+                               volunteer_id=volunteer_id,
+                               volunteer=editedVolunteer)
 
 
-## Delete a volunteer
-@app.route('/event/<int:event_id>/volunteers/<int:volunteer_id>/delete', methods=['GET', 'POST'])
+# Delete a volunteer
+@app.route('/event/<int:event_id>/volunteers/<int:volunteer_id>/delete',
+           methods=['GET', 'POST'])
 def deleteVolunteer(event_id, volunteer_id):
     event = session.query(Event).filter_by(id=event_id).one()
-    volunteerToDelete = session.query(Volunteer).filter_by(id=volunteer_id).one()
+    volunteerToDelete = session.query(Volunteer).filter_by(
+        id=volunteer_id).one()
     owner = getUserInfo(volunteerToDelete.user_id)
     if owner.id != login_session['user_id']:
-        flash("You do not have permission to edit this event. Event owner: %s" % owner.name)
+        flash(
+            "You do not have permission to edit this event. Event owner: %s"
+            % owner.name)
         return redirect(url_for('showEvents'))
     if request.method == 'POST':
         session.delete(volunteerToDelete)
@@ -346,10 +380,11 @@ def deleteVolunteer(event_id, volunteer_id):
         flash('Volunteer Successfully Deleted')
         return redirect(url_for('showVolunteers', event_id=event_id))
     else:
-        return render_template('deleteVolunteer.html', event_id=event_id, volunteer=volunteerToDelete)
+        return render_template('deleteVolunteer.html', event_id=event_id,
+                               volunteer=volunteerToDelete)
 
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = False
-    app.run(host = '0.0.0.0', port = 5000, threaded= False)
+    app.run(host='0.0.0.0', port=5000, threaded=False)
