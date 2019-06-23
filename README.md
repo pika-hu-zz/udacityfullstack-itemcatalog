@@ -1,62 +1,48 @@
-# Logs Analysis
+# Item Catalog
 
 > Raymond Hu
 
 ## Overview
 
-This is a reporting tool that extracts summaries from a large database containing newspaper articles as awell as the web server log for the newspaper site. The reports generated answer the following questions:
-
-* What are the three most popular articles of all time? (1st query)
-* Who are the most popular article authors of all time? (2nd query)
-* On which days did more than 1% of requests lead to errors? (3rd query)
+This is a volunteer tracker for the AT&T Aspire program, created to fulfill the item catalog project requirement for the Udacity Full-Stack Developer Nanodegree. This application provides a list of events containing event details and the volunteers signed up for the event. It is supported by a database with REST endpoints that allow users CRUD capability to modify the database. It also protects write functions with AuthN/AuthZ through Google Federation and implements JSON endpoints.
 
 ## Code Design
 
-* The code interacts with data extracted from the the *newsdata.sql* file (this can be obtained from Udacity)
-* Each report uses a single database query to allow for most of the load to be handled by the database, with minimal post-processing by the Ptyhon code
-* Views were created in order to easily execute the 3rd query (above) without modifying the original database
+* The ```database_setup.py``` and ```initialevents.py``` files contain code that setup the database and populate it with inital data
+* The ```project.py``` file contains code to start the server
 
 ## Technologies Used
 
 * Python3
-* PostgreSQL
+* HTML
+* CSS
+* Flask
+* SQLAlchemy
+* SQLLite
+* OAuth
 * Vagrant
 * VirtualBox
 * Git
 
 ## Setup
 
-> Assuming you have Python3, Vagrant, and VitualBox already installed
+> Assuming you have Python3, Vagrant, VitualBox, Flask, SQLAlchemy, SQLLite, and OAuth modules already installed
 
 1. Clone this repository
-2. Download the *newsdata.sql* from Udacity and move both *newsdata.sql* and *generate-report.py* (from cloned repository) into the vagrant directory within your VM
-3. Start up and log into your VM and change to your vagrant directory
-4. Run command ```psql -d news -f newsdata.sql``` to load the data from *newsdata.sql* into your local database
-5. Run database using ```psql -d news``` and create views (see below)
-6. Run command ```python3 generate-report.py``` to generate the report
+2. Start up and log into your VM and change to your vagrant directory
+3. Run commands ```python3 database_setup.py``` and ```python3 initialevents.py``` to setup and populate database with initial data
+4. Run command ```python3 project.py``` to start server
 
-## Views
+## Routes
 
-View total number of errors per day:
-````sql
-    CREATE VIEW totalerrors AS
-    SELECT cast(time as date) AS day, count(*) AS errors
-    FROM log
-    WHERE status = '404 NOT FOUND'
-    GROUP BY day;
-````
-View total number of visits per day:
-````sql
-    CREATE VIEW totalvisits AS
-    SELECT cast(time as date) AS day, count(*) AS visits
-    FROM log
-    GROUP BY day;
-````
-View error percentage per day:
-````sql
-    CREATE VIEW errorpercent AS
-    SELECT totalerrors.day, totalerrors.errors, totalvisits.visits,
-    (cast(totalerrors.errors as double precision))/(cast(totalvisits.visits as double precision)) * 100 AS errorPercent
-    FROM totalerrors, totalvisits
-    WHERE totalerrors.day = totalvisits.day;
-````
+* ```/``` or ```/home/``` - Returns homepage with a list of all events ordered by date
+* ```/event/new/``` - Allows user to create a new event (once logged in)
+* ```/event/<int:event_id>/edit/``` - Allows user to edit an existing event (if user owns the event)
+* ```/event/<int:event_id>/delete/``` - Allows user to delete an event (if user owns the event)
+* ```/event/<int:event_id>/``` or ```/event/<int:event_id>/volunteers/``` - Returns event page with event details and volunteers signed up for event
+* ```/event/<int:event_id>/volunteers/new/``` - Allows user to add a volunteer to the event (if user owns the event)
+* ```/event/<int:event_id>/volunteers/<int:volunteer_id>/edit/``` - Allows user to edit an existing volunteer (if user owns the volunteer)
+* ```/event/<int:event_id>/volunteers/<int:volunteer_id>/delete/``` - Allows user to delete a volunteer( if user owns the volunteer)
+* ```/login/``` - Returns page allowing user to login
+* ```/gconnect/``` - Attempts to log user in using Google Federation
+* ```/gdisconnect/``` - Attempts to log out user
